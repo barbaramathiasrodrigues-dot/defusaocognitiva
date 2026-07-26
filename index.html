@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entre Pensamento e Realidade - Desfusão Cognitiva</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #818cf8; /* Violeta Calmo / Lente */
+      --accent-hover: #6366f1;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 520px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    h1, h2, h3 { margin: 0 0 6px 0; }
+    .muted { color: var(--text-muted); font-size: 0.85rem; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* LENTE / MODO CÂMERA DA REALIDADE */
+    .camera-mode {
+      background: #020617;
+      border: 1px solid #475569;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
+    }
+
+    .alert-word {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border: 1px solid var(--warning);
+      margin-top: 4px;
+    }
+
+    /* CAMPOS & FORMULÁRIOS */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px;
+      font-family: inherit;
+      font-size: 0.88rem;
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+    .btn {
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-secondary { background: #334155; }
+    .btn-secondary:hover { background: #475569; }
+
+    .card-item {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    .tag-chip {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      background: #334155;
+      border-radius: 6px;
+      display: inline-block;
+      margin-right: 4px;
+      margin-top: 4px;
+    }
+  </style>
+
+  <!-- SDKs do Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- TELA 1: HOME (ENTRE PENSAMENTO E REALIDADE) -->
+  <div id="screen-home" class="screen active">
+    <h2>💬 Entre Pensamento e Realidade</h2>
+    <p class="muted">Desfusão Cognitiva para Decisões Pautadas em Fatos</p>
+
+    <div style="background: #0f172a; padding: 12px; border-radius: 12px; border-left: 3px solid var(--accent); margin: 14px 0;">
+      <p style="font-size: 0.82rem; margin: 0; color: #cbd5e1;">
+        "O objetivo não é provar que o pensamento está errado, mas descobrir o que ele tenta dizer sem transformar um estado em identidade."
+      </p>
+    </div>
+
+    <p style="font-weight: bold; font-size: 0.9rem; margin-top: 16px;">O que apareceu na sua cabeça agora?</p>
+
+    <button class="btn" style="margin-bottom: 8px;" onclick="startSession('rapida')">⚡ Desfusão Rápida (1 min)</button>
+    <button class="btn btn-secondary" style="margin-bottom: 8px;" onclick="startSession('completa')">🔍 Desfusão Completa (4 min)</button>
+    <button class="btn btn-secondary" onclick="showScreen('screen-history')">📖 Ver Registros e Padrões</button>
+  </div>
+
+  <!-- TELA 2: ETAPA 1 - O PENSAMENTO AUTOMÁTICO -->
+  <div id="screen-step1" class="screen">
+    <h2>💭 Etapa 1: O Pensamento</h2>
+    <p class="muted">Qual frase automática ou julgamento apareceu?</p>
+
+    <label>Pensamento Automático:</label>
+    <textarea id="p-thought" placeholder="Ex: 'Eu sou incompetente', 'Eu estrago tudo', 'Nunca consigo terminar'..." oninput="checkGlobalWords()"></textarea>
+    
+    <div id="alert-container"></div>
+
+    <label>Esta frase está descrevendo:</label>
+    <select id="p-type">
+      <option value="🪞 Identidade Global ('Quem eu sou')">🪞 Identidade Global ("Quem eu sou")</option>
+      <option value="🌦️ Estado Temporário do Sistema">🌦️ Estado Temporário do Sistema</option>
+      <option value="🎬 Um Comportamento Específico">🎬 Um Comportamento Específico</option>
+      <option value="🧩 Uma Interpretação Rápida">🧩 Uma Interpretação Rápida</option>
+    </select>
+
+    <div style="display:flex; gap:8px; margin-top: 16px;">
+      <button class="btn" onclick="nextStep()">Próximo: Câmera da Realidade ➔</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-home')">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- TELA 3: ETAPA 2 - CÂMERA DA REALIDADE (MODO NEUTRO) -->
+  <div id="screen-step2" class="screen">
+    <h2>🎥 Câmera da Realidade</h2>
+    <p class="muted">Se uma câmera estivesse filmando, o que ela teria registrado?</p>
+
+    <div class="camera-mode">
+      <label style="color: #93c5fd; margin-top:0;">1. Fatos Observáveis (O que a lente gravou):</label>
+      <textarea id="p-facts" placeholder="Ex: Comecei a chorar durante a conversa, saí da sala..."></textarea>
+
+      <label style="color: #fca5a5;">2. Minha Interpretação (Sua leitura):</label>
+
+<textarea id="p-interp" placeholder="Ex: Fiquei ridícula, perdi o controle de tudo..."></textarea>
+
+      <label style="color: #fde047;">3. O que senti (Emoção no corpo):</label>
+      <input type="text" id="f-emotion" placeholder="Ex: Vergonha, aperto no peito, raiva...">
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top: 16px;">
+      <button class="btn" onclick="showScreen('screen-step3')">Próximo: Mapa de Contexto ➔</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-step1')">⬅ Voltar</button>
+    </div>
+  </div>
+
+  <!-- TELA 4: MAPA DE CONTEXTO & REFORMULAÇÃO PRECISA -->
+  <div id="screen-step3" class="screen">
+    <h2>🌿 Contexto & Leitura Precisa</h2>
+    <p class="muted">Contexto explica o custo. Não apaga responsabilidade, elimina a culpa.</p>
+
+    <label>O que também influenciou o estado do seu sistema?</label>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.8rem;">
+      <label><input type="checkbox" class="ctx-check" value="Sobrecarga Sensorial"> 🔊 Sobrecarga</label>
+      <label><input type="checkbox" class="ctx-check" value="Múltiplas Interrupções"> 🔀 Interrupções</label>
+      <label><input type="checkbox" class="ctx-check" value="Exposição Social"> 👥 Exposição Social</label>
+      <label><input type="checkbox" class="ctx-check" value="Cansaço / Sono"> 😴 Cansaço / Sono</label>
+      <label><input type="checkbox" class="ctx-check" value="Ciclo Menstrual"> 🩸 Ciclo</label>
+      <label><input type="checkbox" class="ctx-check" value="Medo de Julgamento"> 🫣 Vergonha/Medo</label>
+    </div>
+
+    <label style="margin-top: 14px;">Reformulação de Precisão (Frase mais realista):</label>
+    <textarea id="p-reformulated" placeholder="Ex: 'Fiquei sobrecarregada numa situação com muitas demandas e meu corpo reagiu com choro.'"></textarea>
+
+    <label>Próxima Ação Realista (O que a realidade pede agora?):</label>
+    <input type="text" id="p-action" placeholder="Ex: Pausar a conversa, regular o corpo, sair de cena...">
+
+    <label>Enviar para onde?</label>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.8rem;">
+      <label><input type="checkbox" id="dest-terapia"> 💬 Terapia (Rafael)</label>
+      <label><input type="checkbox" id="dest-manual"> 📖 Manual da Bárbara</label>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top: 16px;">
+      <button class="btn" onclick="saveDefusionSession()">💾 Concluir Desfusão</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-step2')">⬅ Voltar</button>
+    </div>
+  </div>
+
+  <!-- TELA 5: HISTÓRICO DE DESFUSÕES -->
+  <div id="screen-history" class="screen">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2>📖 Registros de Desfusão</h2>
+      <button class="btn btn-secondary" style="width:auto; font-size:0.75rem; padding: 6px 10px;" onclick="showScreen('screen-home')">Home</button>
+    </div>
+    <div id="history-list" style="margin-top: 12px;"></div>
+  </div>
+
+</div>
+
+<script>
+  // Firebase usando o projeto cursor-web-39dea
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxLP6F6kWPLlZSREjPRInTmFXwO1Yjm8w",
+    authDomain: "cursor-web-39dea.firebaseapp.com",
+    projectId: "cursor-web-39dea",
+    storageBucket: "cursor-web-39dea.firebasestorage.app",
+    messagingSenderId: "601695833856",
+    appId: "1:601695833856:web:90d7796083527e54912de5",
+    measurementId: "G-SL0ZC9B5FM"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const collectionRef = db.collection('cognitive_defusion');
+
+  let sessionMode = 'completa';
+  let historyData = [];
+
+  collectionRef.onSnapshot(snapshot => {
+    historyData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderHistory();
+  });
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function startSession(mode) {
+    sessionMode = mode;
+    document.getElementById('p-thought').value = '';
+    document.getElementById('p-facts').value = '';
+    document.getElementById('p-interp').value = '';
+    document.getElementById('f-emotion').value = '';
+    document.getElementById('p-reformulated').value = '';
+    document.getElementById('p-action').value = '';
+    showScreen('screen-step1');
+  }
+
+  function checkGlobalWords() {
+    const text = document.getElementById('p-thought').value.toLowerCase();
+    const alertBox = document.getElementById('alert-container');
+    const globalTerms = ['sou', 'nunca', 'sempre', 'tudo', 'nada', 'incapaz', 'estrago', 'fracasso'];
+    
+    let found = globalTerms.filter(term => text.includes(term));
+    if (found.length > 0) {
+      alertBox.innerHTML = `<span class="alert-word">⚠️ Termo global detectado (${found.join(', ')}): Isso descreve um episódio ou define quem você é?</span>`;
+    } else {
+      alertBox.innerHTML = '';
+    }
+  }
+
+  function nextStep() {
+    if (sessionMode === 'rapida') {
+      showScreen('screen-step3');
+    } else {
+      showScreen('screen-step2');
+    }
+  }
+
+  async function saveDefusionSession() {
+    const thought = document.getElementById('p-thought').value.trim();
+    const type = document.getElementById('p-type').value;
+    const facts = document.getElementById('p-facts').value.trim();
+    const interp = document.getElementById('p-interp').value.trim();
+    const emotion = document.getElementById('f-emotion').value.trim();
+    const reformulated = document.getElementById('p-reformulated').value.trim();
+    const action = document.getElementById('p-action').value.trim();
+
+    let contexts = [];
+    document.querySelectorAll('.ctx-check:checked').forEach(c => contexts.push(c.value));
+
+    if (!thought) {
+      alert("Por favor, digite o pensamento inicial!");
+      return;
+    }
+
+    await collectionRef.add({
+      thought,
+      type,
+      facts,
+      interp,
+      emotion,
+      contexts,
+      reformulated,
+      action,
+      destTerapia: document.getElementById('dest-terapia').checked,
+      destManual: document.getElementById('dest-manual').checked,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("✨ Desfusão registrada! Pensamento ressignificado com sucesso.");
+    showScreen('screen-home');
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+
+    if (historyData.length === 0) {
+      list.innerHTML = `<div class="muted" style="text-align:center; padding: 20px;">Nenhum registro armazenado.</div>`;
+      return;
+    }
+
+    historyData.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card-item';
+
+      card.innerHTML = `
+        <div style="color: var(--danger); font-size: 0.82rem; font-weight: bold;">💭 "${item.thought}"</div>
+        <div style="color: var(--success); font-size: 0.85rem; font-weight: bold; margin-top: 4px;">🌱 Reformulação: ${item.reformulated || '—'}</div>
+        <div style="font-size:0.78rem; margin-top: 4px;">🎯 Ação: <strong>${item.action || '—'}</strong></div>
+        <div>${(item.contexts || []).map(c => `<span class="tag-chip">${c}</span>`).join('')}</div>
+        <div style="text-align:right; margin-top:6px;">
+          <button class="btn-secondary" style="font-size:0.65rem; padding: 2px 6px; border:none; border-radius:4px; cursor:pointer;" onclick="deleteSession('${item.id}')">🗑️ Apagar</button>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  async function deleteSession(id) {
+    if (confirm("Remover este registro?")) {
+      await collectionRef.doc(id).delete();
+    }
+  }
+</script>
+
+</body>
+</html>
